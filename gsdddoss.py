@@ -4,7 +4,7 @@ import datetime
 isLinux = False
 if sys.platform == "linux" or sys.platform == "linux2":
 	isLinux = True
-	
+
 import re
 import subprocess
 import json
@@ -26,12 +26,12 @@ else:
 			return True
 
 
-		
+
 if not is_admin():
 	print("This script requires python to be run as administrator!")
 	print("Otherwise no changes can be made to the firewall.")
 	sys.exit(0)
-	
+
 if not os.path.isfile("ips.json"):
 	print("Missing .json file!\n")
 	print("Please create a file named \"ips.json\" in the script's directory")
@@ -41,11 +41,11 @@ if not os.path.isfile("ips.json"):
 def config_save(data, conf):
 	with open(conf+".json", "w", encoding="utf-8") as f:
 		json.dump(data, f)
-		
+
 def config_load(conf):
 	with open(conf+".json", "r", encoding="utf-8") as f:
 		return json.load(f)
-	
+
 class badip:
 	def __init__(self, ip, port):
 		self.ip = ip
@@ -57,20 +57,20 @@ def regex(incoming, pattern):
 		return badip(regsearch.group(1), regsearch.group(2))
 	else:
 		return None
-		
+
 def getall(ip):
 	ret = ip
 	for storedip in main_config["banned"]:
 		ret = ret+",{}".format(storedip)
-		
+
 	return ret
-		
+
 def blockip(ip): #Make one rule per IP, used to group IPs in windows but it quickly hit the firewall rule limitation.
 	if isLinux:
 		subprocess.call("iptables -A INPUT -s {} -j DROP".format(ip), shell=True)
 	else:
 		subprocess.call("netsh advfirewall firewall add rule name=\"Blocked IP\" dir=in interface=any action=block remoteip={}".format(ip), shell=True)
-		
+
 	main_config["banned"].append(ip)
 	print("Blocked ip: "+ip)
 	config_save(main_config, "ips")
@@ -84,7 +84,7 @@ def count_ports(input, match):
 	for inp in input:
 		if inp == match:
 			ret = ret+1
-			
+
 	return ret
 
 #hacky udp loop
@@ -110,14 +110,14 @@ for data in udp_server():
 					blockip(ret.ip)
 					if ret.ip in hotlist:
 						hotlist.pop(ret.ip)
-						
+
 					iplist.pop(ret.ip)
-					
+
 				if(counted <= 1 and len(iplist[ret.ip]) > 12):
 					print("Popping: {} (most likely valid person spamming browser refresh)".format(ret.ip))
 					future = datetime.datetime.utcnow() + datetime.timedelta(seconds=240)
 					future = future.replace(tzinfo=datetime.timezone.utc).timestamp()
-					
+
 					if ret.ip in hotlist:
 						hotlist[ret.ip].append(future)
 						timenow = datetime.datetime.utcnow()
@@ -125,7 +125,7 @@ for data in udp_server():
 							timethen = datetime.datetime.utcfromtimestamp(hottime)
 							if(timethen < timenow):
 								hotlist.remove(hottime)
-						
+
 						if len(hotlist[ret.ip]) > 3:
 							print("Found a naughty ip: {} (rate limit, port blasting)".format(ret.ip))
 							hotlist.pop(ret.ip)
@@ -133,18 +133,18 @@ for data in udp_server():
 					else:
 						hotlist[ret.ip] = []
 						hotlist[ret.ip].append(future)
-						
+
 					iplist.pop(ret.ip)
 			else:
 				iplist[ret.ip] = []
 				iplist[ret.ip].append(ret.port)
-				
+
 	ret = regex(data, "^([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):([0-9]+)\stried\sto\ssend\ssplit\spacket")
 	if(ret != None):
 		if ret.ip not in main_config["banned"]:
 			print("Found extremely naughty ip: {} (SPLIT PACKET!)".format(ret.ip))
 			blockip(ret.ip)
-			
+
 	ret = regex(data, "Bad\sRcon:\s(?:.*)\sfrom\s\"([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+):([0-9]+)\"")
 	if(ret != None):
 		if ret.ip not in main_config["banned"]:
