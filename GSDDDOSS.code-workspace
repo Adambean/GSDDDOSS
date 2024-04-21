@@ -4,7 +4,11 @@
 			"path": "."
 		}
 	],
-	"settings": {},
+	"settings": {
+		"editor.indentSize": "tabSize",
+		"editor.insertSpaces": false,
+		"editor.tabSize": 4
+	},
 	"extensions": {
 		"recommendations": [
 			"donjayamanne.python-environment-manager",
