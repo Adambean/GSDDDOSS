@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {},
+	"extensions": {
+		"recommendations": [
+			"donjayamanne.python-environment-manager",
+			"ms-python.debugpy",
+			"ms-python.python",
+			"ms-python.vscode-pylance"
+		]
+	}
+}
